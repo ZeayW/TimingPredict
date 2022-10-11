@@ -48,12 +48,21 @@ for k in available_data:
         g.ndata['n_ats'],
         torch.log(0.0001 + g.ndata['n_slews']) + 3
     ], dim=1)
+    # edge feature
     g.edges['cell_out'].data['ef'] = g.edges['cell_out'].data['ef'].type(torch.float32)
+    # cell delay
     g.edges['cell_out'].data['e_cell_delays'] = g.edges['cell_out'].data['e_cell_delays'].type(torch.float32)
+    # topology level
     topo, topo_time = gen_topo(g)
+    # nf: node feature,
+
+    # cell input_nodes: fanin; cell output_nodes: fanout
     ts = {'input_nodes': (g.ndata['nf'][:, 1] < 0.5).nonzero().flatten().type(torch.int32),
           'output_nodes': (g.ndata['nf'][:, 1] > 0.5).nonzero().flatten().type(torch.int32),
           'output_nodes_nonpi': torch.logical_and(g.ndata['nf'][:, 1] > 0.5, g.ndata['nf'][:, 0] < 0.5).nonzero().flatten().type(torch.int32),
+          # pi are cell inputs and po are cell outputs
+          # pi: is fanout and is PI/PO
+          # po: is fanin and is PI/PO
           'pi_nodes': torch.logical_and(g.ndata['nf'][:, 1] > 0.5, g.ndata['nf'][:, 0] > 0.5).nonzero().flatten().type(torch.int32),
           'po_nodes': torch.logical_and(g.ndata['nf'][:, 1] < 0.5, g.ndata['nf'][:, 0] > 0.5).nonzero().flatten().type(torch.int32),
           'endpoints': (g.ndata['n_is_timing_endpt'] > 0.5).nonzero().flatten().type(torch.long),
